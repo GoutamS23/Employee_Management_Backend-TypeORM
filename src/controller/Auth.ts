@@ -55,16 +55,14 @@ export const signup = async (req: Request, res: Response) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const userRepository=MyDataSource.getRepository(User);
+        const userRepository = MyDataSource.getRepository(User);
         const newUser = new User();
         newUser.firstName = firstName
         newUser.lastName = lastName
         newUser.email = email
         newUser.password = hashedPassword
-        newUser.checkIns=[]
-        newUser.checkOuts=[]
-        newUser.leavesTaken=0
-        newUser.totalLeavesPerMonth=5
+        newUser.leavesTaken = 0
+        newUser.totalLeavesPerMonth = 5
 
 
 
@@ -89,7 +87,7 @@ export const signup = async (req: Request, res: Response) => {
 // login
 
 export const login = async (req: Request, res: Response) => {
-    try{
+    try {
 
         const { email, password } = req.body;
 
@@ -117,7 +115,14 @@ export const login = async (req: Request, res: Response) => {
 
         if (await bcrypt.compare(password, user.password)) {
 
-            const jwtSecret = process.env.JWT_SECRET || 'sonu';
+            const jwtSecret = process.env.JWT_SECRET;
+
+            if (!jwtSecret) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'JWT secret is not defined',
+                });
+            }
             console.log(jwtSecret)
             const token = jwt.sign(
                 payload,
@@ -126,8 +131,6 @@ export const login = async (req: Request, res: Response) => {
                     expiresIn: '2h'
                 });
 
-
-            // user = user.toObject();
             user.token = token;
 
             const options = {
@@ -150,7 +153,7 @@ export const login = async (req: Request, res: Response) => {
             })
         }
 
-    }catch(err){
+    } catch (err) {
 
     }
 }

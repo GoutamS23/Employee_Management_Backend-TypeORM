@@ -12,8 +12,8 @@ export class CheckOut {
     userId:ObjectId | string
 
 
-    @ManyToOne(() => User,(user)=>user.checkOuts) // Assuming `checkIns` is the name of the property in User entity
-    @JoinColumn({ name: "userId" }) // Specify the name of the foreign key column
+    @ManyToOne(() => User,(user)=>user.checkOuts) 
+    @JoinColumn({ name: "userId" }) 
     user: User;
 
     @CreateDateColumn({ type: Date })

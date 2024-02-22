@@ -25,7 +25,15 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         // Verify the token
-        const jwtSecret = process.env.JWT_SECRET || "sonu";
+        const jwtSecret = process.env.JWT_SECRET;
+
+        if (!jwtSecret) {
+            return res.status(500).json({
+                success: false,
+                message: 'JWT secret is not defined',
+            });
+        }
+        
         try {
             const decoded = jwt.verify(token, jwtSecret);
             req.user = decoded;

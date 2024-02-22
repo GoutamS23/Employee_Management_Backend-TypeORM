@@ -1,4 +1,4 @@
-import { Entity, ObjectId, ObjectIdColumn, Column, CreateDateColumn, UpdateDateColumn, Unique, OneToOne, OneToMany } from "typeorm";
+import { Entity, ObjectId, ObjectIdColumn, Column, CreateDateColumn, UpdateDateColumn, Unique, OneToOne, OneToMany, JoinColumn } from "typeorm";
 import { CheckIn } from "./checkIn";
 import { CheckOut } from "./checkOut";
 
@@ -24,11 +24,19 @@ export class User {
     @Column()
     token:string
 
-    @OneToMany(()=> CheckIn,(checkIn)=>checkIn.user)
-    checkIns:CheckIn[];
+    @Column()
+    checkInId:ObjectId | string
 
-    @OneToMany(()=> CheckOut,(checkOut)=>checkOut.user)
-    checkOuts:CheckOut[];
+    @OneToMany(() => CheckIn,(checkIn)=>checkIn.user) 
+    @JoinColumn({ name: "checkInId" }) 
+    checkIns:CheckIn;
+
+    @Column()
+    checkOutId:ObjectId | string
+
+    @OneToMany(() => CheckIn,(checkIn)=>checkIn.user) 
+    @JoinColumn({ name: "checkOutId" }) 
+    checkOuts:CheckOut;
 
     @Column({type:"int",default:0})
     leavesTaken:number

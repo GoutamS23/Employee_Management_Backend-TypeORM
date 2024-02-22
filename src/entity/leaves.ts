@@ -1,4 +1,4 @@
-import { Entity, ObjectId, ObjectIdColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from "typeorm";
+import { Entity, ObjectId, ObjectIdColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { User } from "./User";
 import { Schema } from "mongoose";
 
@@ -14,8 +14,12 @@ export class Leave {
     @ObjectIdColumn()
     _id: ObjectId
 
-    @ManyToOne(() => User,(user)=>user._id)
-    userId: User;
+    @Column()
+    userId: ObjectId | string;
+
+    @ManyToOne(() => User,(user)=>user._id) 
+    @JoinColumn({ name: "userId" }) 
+    user: User;
 
     @Column({nullable:false})
     reason:String

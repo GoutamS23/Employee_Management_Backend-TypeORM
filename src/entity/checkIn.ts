@@ -13,13 +13,11 @@ export class CheckIn {
     userId:ObjectId | string
 
 
-    @ManyToOne(() => User,(user)=>user.checkIns) // Assuming `checkIns` is the name of the property in User entity
-    @JoinColumn({ name: "userId" }) // Specify the name of the foreign key column
+    @ManyToOne(() => User,(user)=>user.checkIns) 
+    @JoinColumn({ name: "userId" }) 
     user: User;
 
- 
-    // @ManyToOne(()=>User,(user)=>user.checkIns)
-    // user:User;
+
 
     @CreateDateColumn({ type: Date })
     timestamp: Date;

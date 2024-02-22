@@ -121,7 +121,6 @@ export const generateTimesheetByDate = async (req: Request, res: Response): Prom
         const userId = new ObjectId(uId);
         const { month, year } = req.body;
 
-        // Validate month and year
         if (!month || !year) {
             return res.status(400).json({ message: 'Month and year are required' });
         }
@@ -152,14 +151,11 @@ export const generateTimesheetByDate = async (req: Request, res: Response): Prom
                 },
                 where: {
                     userId: uId,
-                    // timestamp: { $gte: startDate, $lte: endDate }
+                    timestamp: { $gte: startDate, $lte: endDate }
                 }
             }
         );
 
-        console.log(checkIns)
-        console.log(userId)
-        console.log(user)
 
 
         // Fetch check-outs for the month
@@ -170,7 +166,7 @@ export const generateTimesheetByDate = async (req: Request, res: Response): Prom
                 user: true
             },
             where: {
-                userId: userId,
+                userId: uId,
                 timestamp: { $gte: startDate, $lte: endDate }
             }
         });

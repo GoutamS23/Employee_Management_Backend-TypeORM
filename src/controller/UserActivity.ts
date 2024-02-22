@@ -17,38 +17,24 @@ export const checkInUser = async (req: Request, res: Response) => {
         newCheckIn.userId=currentUser.id
         newCheckIn.user = currentUser;
 
-        // Save the new CheckIn entity to the database
         await MyDataSource.manager.save(newCheckIn);
 
-        // Retrieve the User entity from the database
-        // const user = await manager.findOne(User, { where: { email: currentUser.email } });
-        // if (!user) {
-        //     console.error('User not found');
-        //     return res.status(404).json({ error: 'User not found' });
-        // }
 
-        const userRepository = await MyDataSource.manager.findOne(User, { where: { email: currentUser.email } });
-        if (!userRepository) {
+        const user = await MyDataSource.manager.findOne(User, { where: { email: currentUser.email } });
+        if (!user) {
             console.error('User not found');
             return res.status(404).json({ error: 'User not found' });
         }
-        console.log(userRepository)
 
-        if (!userRepository.checkIns) {
-            userRepository.checkIns = []; 
-        }
 
-        // Update the User entity's checkIns property
-        // userRepository.checkIns=[newCheckIn]
-        await userRepository.checkIns.push(newCheckIn);
 
-        // Save the updated User entity to the database
-        await MyDataSource.manager.save(userRepository);
+        await MyDataSource.manager.update(
+            User, // Entity you want to update
+            { email: currentUser.email }, // Criteria to select entities to update
+            { checkInId: newCheckIn._id,checkIns:newCheckIn }
+        );
 
-        // Save the updated User entity to the database
-        // await manager.save(user);
-
-        res.status(201).json({ message: 'User checked in successfully' ,userRepository});
+        res.status(201).json({ message: 'User checked in successfully' ,user});
     } catch (err) {
         console.error('Error during check-in:', err);
         res.status(500).json({ error: 'Internal server error' });
@@ -65,7 +51,7 @@ export const checkOutUser = async (req: Request, res: Response) => {
             relations:{checkIns:true  },
             where: { email: currentUser.email } 
         });
-        if (!user ) {
+        if (!user || !user.checkIns ) {
             return res.status(400).json({ error: 'User has not checked in' });
         }
 
@@ -75,8 +61,12 @@ export const checkOutUser = async (req: Request, res: Response) => {
 
         await manager.save(newCheckOut);
 
-        user.checkOuts = [newCheckOut]; // Assign the CheckOut entity directly
-        await manager.save(user);
+        await manager.update(
+            User, // Entity you want to update
+            { email: currentUser.email }, // Criteria to select entities to update
+            { checkOutId: newCheckOut._id } // Update data
+        );
+        
 
         res.status(201).json({ message: 'User checked out successfully' });
     } catch (err) {

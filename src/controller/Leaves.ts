@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { getMongoManager } from "typeorm";
-import {User} from "../entity/User";
-import {Leave, LeaveStatus} from "../entity/leaves";
+import { User } from "../entity/User";
+import { Leave, LeaveStatus } from "../entity/leaves";
 import { MyDataSource } from "../datasource";
 import { ObjectId } from 'mongodb';
 
@@ -15,9 +15,10 @@ export const userLeaves = async (req: Request, res: Response) => {
         const parsedEndDate = new Date(endDate);
 
         // Check if parsing was successful
-        if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+        if (Number.isNaN(parsedStartDate.getTime()) || Number.isNaN(parsedEndDate.getTime())) {
             return res.status(400).json({ error: 'Invalid start date or end date format' });
         }
+        
 
         // Calculate leave duration
         const leaveDays = Math.ceil((parsedEndDate.getTime() - parsedStartDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -40,13 +41,7 @@ export const userLeaves = async (req: Request, res: Response) => {
         }
 
         const leaveRepository = MyDataSource.getRepository(Leave);
-        // const newLeave = await leaveRepository.create({
-        //     userId: currentUser.id,
-        //     startDate,
-        //     endDate,
-        //     reason,
-        //     status: 'Pending'
-        // });
+
 
         const newLeave = new Leave();
         newLeave.userId = currentUser.id;
@@ -56,11 +51,10 @@ export const userLeaves = async (req: Request, res: Response) => {
         newLeave.status = LeaveStatus.PENDING;
 
         // Save the new leave to the database
-        await leaveRepository.save(newLeave);
+        await MyDataSource.manager.save(newLeave);
 
         res.status(201).json({ message: 'Leave added successfully!', data: newLeave });
 
-        // await leaveRepository.save(newLeave);
 
         user.leavesTaken += leaveDays;
         await MyDataSource.manager.save(user);
@@ -77,7 +71,6 @@ export const leaveHistory = async (req: Request, res: Response) => {
 
         const leaveHistory = await leaveRepository.find({
             where: { userId: currentUser.id },
-            relations: { userId:true}
         });
 
         res.status(200).json({ leaveHistory });
@@ -110,7 +103,7 @@ export const rejectLeave = async (req: Request, res: Response) => {
 
         const leaveRepository = MyDataSource.getRepository(Leave);
 
-        const leave = await leaveRepository.findOne({where:{_id :new ObjectId(leaveId)}});
+        const leave = await leaveRepository.findOne({ where: { _id: new ObjectId(leaveId) } });
         console.log(leave);
         if (!leave) {
             return res.status(404).json({ error: 'Leave not found' });
@@ -120,18 +113,20 @@ export const rejectLeave = async (req: Request, res: Response) => {
 
         if (leave.status !== LeaveStatus.REJECTED) {
             const userRepository = MyDataSource.getRepository(User);
-            const user = await userRepository.findOne({ where: { _id: leave.userId._id } });
+            const user = await userRepository.findOne({where:{ _id:new ObjectId( leave.userId )}});
 
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
             }
 
             const leaveDuration = Math.ceil((leave.endDate.getTime() - leave.startDate.getTime()) / (1000 * 60 * 60 * 24));
-            user.leavesTaken -= leaveDuration;
+            const updatedLeave=user.leavesTaken -= leaveDuration;
 
-            await MyDataSource.manager.save(user);
-
-            
+            await MyDataSource.manager.update(
+                User,
+                {_id:new ObjectId( leave.userId )},
+                {leavesTaken : updatedLeave}
+                );
         }
 
         res.status(200).json({ message: 'Leave rejected successfully.' });
@@ -140,6 +135,7 @@ export const rejectLeave = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 export const allLeaves = async (req: Request, res: Response) => {
     try {
